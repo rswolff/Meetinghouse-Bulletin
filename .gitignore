@@ -1,0 +1,26 @@
+# Build output
+dist/
+
+# Astro cache
+.astro/
+
+# Dependencies
+node_modules/
+
+# Environment variables — copy .env.example and fill in values, never commit .env
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

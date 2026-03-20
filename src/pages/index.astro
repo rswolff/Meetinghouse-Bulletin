@@ -1,0 +1,718 @@
+---
+import { fetchWardData, fetchSpecialEvents } from '../lib/data.js';
+
+// ── Site identity ──────────────────────────────────────────────────────────────
+// Update these two lines when deploying for a different stake or meeting schedule.
+const STAKE_NAME = 'Calgary Alberta West Stake';
+const PAGE_TITLE  = 'Ward Bulletin';
+
+// ── Data (fetched from Google Sheets at build time) ────────────────────────────
+const [wards, specialEvents] = await Promise.all([
+  fetchWardData(),
+  fetchSpecialEvents(),
+]);
+
+// Build the config objects the client-side script expects.
+// These are serialised into the page at build time — no runtime fetch needed.
+const wardsConfig = Object.fromEntries(
+  wards.map(w => [
+    w.key,
+    { name: w.name, url: w.url, cardId: `card-${w.key}` },
+  ])
+);
+
+const windowsConfig = wards.map(w => ({
+  start: parseInt(w.windowStart, 10),
+  end:   parseInt(w.windowEnd,   10),
+  ward:  w.key,
+}));
+
+const specialEventsConfig = specialEvents.map(e => ({
+  date:  e.date,
+  name:  e.name,
+  start: parseInt(e.windowStart, 10),
+  end:   parseInt(e.windowEnd,   10),
+  url:   e.url,
+}));
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{STAKE_NAME} — {PAGE_TITLE}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ─── Redirect Screen ─── -->
+  <div id="redirect-screen">
+    <div class="redir-light">
+      <svg viewBox="0 0 800 320" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="rg0" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#C2E8F2" stop-opacity="0.40"/>
+            <stop offset="100%" stop-color="#C2E8F2" stop-opacity="0.08"/>
+          </linearGradient>
+          <linearGradient id="rg1" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#1A7FA0" stop-opacity="0.38"/>
+            <stop offset="100%" stop-color="#1A7FA0" stop-opacity="0.00"/>
+          </linearGradient>
+          <linearGradient id="rg2" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#2AACC8" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="#2AACC8" stop-opacity="0.00"/>
+          </linearGradient>
+          <linearGradient id="rg3" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#64C2D8" stop-opacity="0.25"/>
+            <stop offset="100%" stop-color="#64C2D8" stop-opacity="0.00"/>
+          </linearGradient>
+          <linearGradient id="rg4" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#A8DCE8" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="#D4F0F8" stop-opacity="0.06"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="320" fill="url(#rg0)"/>
+        <polygon points="0,0 510,0 370,320 0,320"       fill="url(#rg1)"/>
+        <polygon points="0,0 650,0 500,320 160,320"     fill="url(#rg2)"/>
+        <polygon points="0,0 760,0 620,320 330,320"     fill="url(#rg3)"/>
+        <polygon points="0,0 800,0 800,320 530,320"     fill="url(#rg4)"/>
+        <polygon points="750,0 800,0 800,110"           fill="rgba(220,244,250,0.50)"/>
+      </svg>
+    </div>
+    <div class="redir-body">
+      <p class="redir-eyebrow">Taking you to</p>
+      <p class="redir-name" id="redirect-ward-name">—</p>
+      <div class="redir-progress"></div>
+    </div>
+  </div>
+
+  <!-- ─── Landing Screen ─── -->
+  <div id="landing-screen">
+
+    <!-- Header with GVSG Light Graphic -->
+    <div class="page-header">
+      <svg class="light-graphic" viewBox="0 0 800 230" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g0" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#C2E8F2" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#C2E8F2" stop-opacity="0.10"/>
+          </linearGradient>
+          <linearGradient id="g1" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#1A7FA0" stop-opacity="0.40"/>
+            <stop offset="100%" stop-color="#1A7FA0" stop-opacity="0.00"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#2AACC8" stop-opacity="0.32"/>
+            <stop offset="100%" stop-color="#2AACC8" stop-opacity="0.00"/>
+          </linearGradient>
+          <linearGradient id="g3" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#64C2D8" stop-opacity="0.26"/>
+            <stop offset="100%" stop-color="#64C2D8" stop-opacity="0.00"/>
+          </linearGradient>
+          <linearGradient id="g4" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#A8DCE8" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="#D4F0F8" stop-opacity="0.05"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="230" fill="url(#g0)"/>
+        <polygon points="0,0 510,0 370,230 0,230"       fill="url(#g1)"/>
+        <polygon points="0,0 650,0 500,230 160,230"     fill="url(#g2)"/>
+        <polygon points="0,0 755,0 610,230 320,230"     fill="url(#g3)"/>
+        <polygon points="0,0 800,0 800,230 520,230"     fill="url(#g4)"/>
+        <polygon points="755,0 800,0 800,100"           fill="rgba(220,244,250,0.55)"/>
+      </svg>
+
+      <div class="header-content">
+        <p class="stake-label">{STAKE_NAME}</p>
+        <h1>{PAGE_TITLE}</h1>
+        <p class="subtitle">Select your ward below, or scan during services for automatic direction</p>
+      </div>
+    </div>
+
+    <!-- Schedule Banner -->
+    <div class="schedule-banner">
+      <div class="schedule-inner">
+        <span class="sched-heading">Schedule</span>
+        <div class="sched-items">
+          {wards.map(ward => (
+            <div class="sched-item">
+              <span class="sched-time">{ward.displayTime}</span>
+              <span class="sched-ward">{ward.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Ward Cards -->
+    <main>
+      <p class="section-label" id="main-section-label">Ward Announcements</p>
+
+      <!-- Conference card — hidden by default, shown by JS on conference days -->
+      <div id="conference-card" style="display:none" class="conference-card">
+        <div class="conference-card-inner">
+          <div class="conference-info">
+            <p class="conference-badge">Special Event</p>
+            <p class="conference-name" id="conference-name"></p>
+            <p class="conference-sessions" id="conference-sessions"></p>
+          </div>
+          <a class="conference-watch" id="conference-watch-link" href="#">
+            Watch
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7H12M8 3L12 7L8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Ward cards — hidden on conference days -->
+      <div id="ward-cards-section">
+        <div class="card-stack">
+          {wards.map((ward, i) => (
+            <a
+              class="ward-card"
+              id={`card-${ward.key}`}
+              href={ward.url}
+              style={`animation-delay:${(0.52 + i * 0.13).toFixed(2)}s`}
+            >
+              <div class="card-inner">
+                <div>
+                  <div class="card-name">{ward.name}</div>
+                  <div class="card-time">Sundays at <strong>{ward.displayTime}</strong></div>
+                  <div class="now-meeting">Now Meeting</div>
+                </div>
+                <svg class="card-arrow" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M3 9H15M10 4.5L15 9L10 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>
+        This QR code automatically redirects to your ward's announcements during Sunday services.<br />
+        Scan while in the building and you'll be taken directly to the right page.
+      </p>
+    </footer>
+  </div>
+
+  <!--
+    Ward config is baked into the page at build time via define:vars.
+    No runtime fetch — the redirect fires instantly on page load.
+  -->
+  <script define:vars={{ WARDS: wardsConfig, WINDOWS: windowsConfig, SPECIAL_EVENTS: specialEventsConfig }}>
+    function getMountainTime() {
+      return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Denver' }));
+    }
+
+    // Returns "YYYY-MM-DD" in Mountain Time
+    function getMountainDate() {
+      const now = getMountainTime();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getMountainMinutes() {
+      const now = getMountainTime();
+      return now.getHours() * 60 + now.getMinutes();
+    }
+
+    function formatTime(mins) {
+      const h    = Math.floor(mins / 60);
+      const m    = mins % 60;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hour = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+      return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
+    // Returns all special event sessions scheduled for today
+    function getTodaySpecialSessions() {
+      const today = getMountainDate();
+      return SPECIAL_EVENTS.filter(e => e.date === today);
+    }
+
+    // Returns the session currently in progress, or null
+    function getActiveSpecialSession(sessions) {
+      const mins = getMountainMinutes();
+      return sessions.find(e => mins >= e.start && mins < e.end) || null;
+    }
+
+    // Returns the active ward key if it's Sunday and within a ward's window
+    function getActiveWard() {
+      if (getMountainTime().getDay() !== 0) return null; // 0 = Sunday
+      const mins = getMountainMinutes();
+      for (const w of WINDOWS) {
+        if (mins >= w.start && mins < w.end) return w.ward;
+      }
+      return null;
+    }
+
+    function doRedirect(name, url) {
+      document.getElementById('redirect-ward-name').textContent = name;
+      document.getElementById('redirect-screen').classList.add('active');
+      setTimeout(() => { window.location.replace(url); }, 2200);
+    }
+
+    function showLanding(activeWardKey) {
+      document.getElementById('landing-screen').classList.add('active');
+      if (activeWardKey) {
+        document.getElementById(WARDS[activeWardKey].cardId).classList.add('current');
+      }
+    }
+
+    function showConferenceLanding(sessions) {
+      const { name, url } = sessions[0];
+
+      // Populate the conference card
+      document.getElementById('conference-name').textContent = name;
+      document.getElementById('conference-watch-link').href = url;
+
+      // List today's session times
+      const times = sessions.map(s => `${formatTime(s.start)} – ${formatTime(s.end)}`).join('  ·  ');
+      document.getElementById('conference-sessions').textContent = `Today's sessions: ${times}`;
+
+      // Show conference card, hide ward cards
+      document.getElementById('conference-card').style.display = 'block';
+      document.getElementById('ward-cards-section').style.display = 'none';
+      document.getElementById('main-section-label').textContent = 'Special Event';
+
+      document.getElementById('landing-screen').classList.add('active');
+    }
+
+    // ── Main logic ─────────────────────────────────────────────────────────────
+    // Priority: active special event session → conference day → active ward → landing page
+
+    const todaySessions  = getTodaySpecialSessions();
+    const activeSession  = getActiveSpecialSession(todaySessions);
+
+    if (activeSession) {
+      doRedirect(activeSession.name, activeSession.url);
+    } else if (todaySessions.length > 0) {
+      showConferenceLanding(todaySessions);
+    } else {
+      const activeWard = getActiveWard();
+      if (activeWard) {
+        doRedirect(WARDS[activeWard].name, WARDS[activeWard].url);
+      } else {
+        showLanding(null);
+      }
+    }
+  </script>
+
+</body>
+</html>
+
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:        #1A7FA0;
+    --teal-dark:   #0D5468;
+    --teal-mid:    #2AACC8;
+    --teal-light:  #64C2D8;
+    --teal-pale:   #C2E8F2;
+    --teal-wash:   #EBF7FA;
+    --red:         #B5202E;
+    --text:        #1A1A1A;
+    --text-mid:    #4E4E4E;
+    --text-light:  #8A8A8A;
+    --border:      #DCE8ED;
+    --divider:     #E8EFF2;
+    --white:       #FFFFFF;
+    --off-white:   #F4F8FA;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--white);
+    color: var(--text);
+    font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Redirect Screen ── */
+  #redirect-screen {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--white);
+    z-index: 200;
+    flex-direction: column;
+  }
+  #redirect-screen.active { display: flex; }
+
+  .redir-light {
+    position: relative;
+    height: 45vh;
+    min-height: 180px;
+    max-height: 320px;
+    flex-shrink: 0;
+  }
+  .redir-light svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+
+  .redir-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 2rem 3rem;
+    text-align: center;
+  }
+
+  .redir-eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.2s forwards;
+  }
+  .redir-name {
+    font-family: 'Spectral', Georgia, serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    color: var(--teal-dark);
+    line-height: 1.2;
+    opacity: 0;
+    animation: fadeUp 0.6s ease 0.4s forwards;
+  }
+
+  .redir-progress {
+    margin-top: 2.5rem;
+    width: 200px;
+    height: 2px;
+    background: var(--teal-pale);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeIn 0.4s ease 0.6s forwards;
+  }
+  .redir-progress::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--teal);
+    transform: translateX(-100%);
+    animation: trackFill 1.4s cubic-bezier(0.4,0,0.2,1) 0.8s forwards;
+  }
+
+  /* ── Landing Screen ── */
+  #landing-screen {
+    display: none;
+    min-height: 100vh;
+    min-height: 100svh;
+    flex-direction: column;
+  }
+  #landing-screen.active { display: flex; }
+
+  /* Header */
+  .page-header {
+    position: relative;
+    overflow: hidden;
+    min-height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+  }
+
+  .light-graphic {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+  }
+
+  .header-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .stake-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--teal-dark);
+    font-weight: 600;
+    margin-bottom: 1.1rem;
+    opacity: 0;
+    animation: fadeUp 0.65s ease 0.1s forwards;
+  }
+
+  h1 {
+    font-family: 'Spectral', Georgia, serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(2.2rem, 6.5vw, 3.4rem);
+    color: var(--teal-dark);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.85rem;
+    opacity: 0;
+    animation: fadeUp 0.65s ease 0.2s forwards;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    line-height: 1.65;
+    max-width: 310px;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.65s ease 0.3s forwards;
+  }
+
+  /* Schedule Banner */
+  .schedule-banner {
+    background: var(--teal-dark);
+    padding: 0.95rem 2rem;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 0.38s forwards;
+  }
+
+  .schedule-inner {
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .sched-heading {
+    font-size: 0.6rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    font-weight: 600;
+    margin-right: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .sched-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sched-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0 0.85rem;
+    border-right: 1px solid rgba(255,255,255,0.12);
+    font-size: 0.82rem;
+    line-height: 1;
+  }
+  .sched-item:last-child { border-right: none; }
+  .sched-time { color: var(--teal-pale); font-weight: 400; }
+  .sched-ward { color: rgba(255,255,255,0.7); }
+
+  /* Main */
+  main {
+    flex: 1;
+    background: var(--off-white);
+    padding: 2.5rem 1.5rem 4.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .section-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    font-weight: 600;
+    margin-bottom: 1.4rem;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.48s forwards;
+  }
+
+  .card-stack {
+    width: 100%;
+    max-width: 480px;
+    border: 1px solid var(--border);
+    background: var(--divider);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    box-shadow: 0 2px 20px rgba(13,84,104,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .ward-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--white);
+    border-left: 4px solid var(--teal-pale);
+    position: relative;
+    transition: border-left-color 0.2s ease, background 0.15s ease;
+    opacity: 0;
+    animation: cardIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ward-card:hover {
+    background: var(--teal-wash);
+    border-left-color: var(--teal);
+  }
+  .ward-card:hover .card-arrow { transform: translateX(4px); color: var(--teal-dark); }
+
+  .card-inner {
+    padding: 1.3rem 1.5rem 1.3rem 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .card-name {
+    font-family: 'Spectral', Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .card-time {
+    font-size: 0.83rem;
+    color: var(--text-light);
+    margin-top: 0.22rem;
+    font-weight: 300;
+  }
+  .card-time strong {
+    color: var(--teal-dark);
+    font-weight: 400;
+  }
+
+  /* Red italic "Now Meeting" — GVSG emphasis style */
+  .now-meeting {
+    display: none;
+    font-family: 'Spectral', Georgia, serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--red);
+    margin-top: 0.3rem;
+  }
+
+  .card-arrow {
+    color: var(--teal-light);
+    flex-shrink: 0;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  /* ── Conference Card ── */
+  .conference-card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--teal-dark);
+    border-left: 4px solid var(--teal-light);
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 20px rgba(13,84,104,0.18), 0 1px 4px rgba(0,0,0,0.06);
+    animation: cardIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+
+  .conference-card-inner {
+    padding: 1.4rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.2rem;
+  }
+
+  .conference-badge {
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--teal-pale);
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .conference-name {
+    font-family: 'Spectral', Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+
+  .conference-sessions {
+    font-size: 0.78rem;
+    color: var(--teal-pale);
+    margin-top: 0.35rem;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .conference-watch {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--teal);
+    color: #ffffff;
+    text-decoration: none;
+    padding: 0.55rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .conference-watch:hover { background: var(--teal-mid); }
+
+  .ward-card.current {
+    border-left-color: var(--teal);
+    background: var(--teal-wash);
+  }
+  .ward-card.current .now-meeting { display: block; }
+  .ward-card.current .card-name   { color: var(--teal-dark); }
+
+  /* Footer */
+  footer {
+    background: var(--off-white);
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem 3rem;
+    text-align: center;
+  }
+  footer p {
+    font-size: 0.77rem;
+    color: var(--text-light);
+    line-height: 1.85;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes trackFill {
+    to { transform: translateX(0); }
+  }
+</style>
