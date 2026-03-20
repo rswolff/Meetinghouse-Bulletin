@@ -1,27 +1,31 @@
 /**
- * Fetches ward data from a published Google Sheet CSV at build time.
+ * Fetches ward and special event data from a single published Google Sheet CSV at build time.
  *
- * Expected sheet columns (row 1 must be a header row with these exact names):
- *   key          – Short identifier, no spaces (e.g. rockyview). Used as the DOM id.
- *   name         – Full display name (e.g. Rockyview Ward)
- *   displayTime  – Human-readable meeting time (e.g. 9:00 AM)
+ * All rows live in one tab. A `type` column distinguishes ward rows from event rows.
+ *
+ * Required columns (row 1 must be a header row with these exact names):
+ *   type         – "ward" or "event"
+ *   key          – Ward only. Short identifier, no spaces (e.g. rockyview). Used as the DOM id.
+ *   name         – Full display name (e.g. Rockyview Ward / General Conference)
+ *   displayTime  – Ward only. Human-readable meeting time (e.g. 9:00 AM)
  *   windowStart  – Auto-redirect window start, minutes since midnight (e.g. 480 = 8:00 AM)
  *   windowEnd    – Auto-redirect window end,   minutes since midnight (e.g. 600 = 10:00 AM)
- *   url          – Full URL of the ward's announcement website
+ *   url          – Full URL for the ward or event
+ *   date         – Event only. YYYY-MM-DD (e.g. 2025-04-05)
  *
  * Example sheet rows:
- *   key,name,displayTime,windowStart,windowEnd,url
- *   rockyview,Rockyview Ward,9:00 AM,480,600,https://rockyview.example.com
- *   arbourlake,Arbour Lake Ward,10:30 AM,600,690,https://arbourlake.example.com
- *   bowness,Bowness Ward,12:00 PM,690,780,https://www.bownessward.ca/announcements
+ *   type,key,name,displayTime,windowStart,windowEnd,url,date
+ *   ward,rockyview,Rockyview Ward,9:00 AM,480,600,https://rockyview.example.com,
+ *   ward,arbourlake,Arbour Lake Ward,10:30 AM,600,690,https://arbourlake.example.com,
+ *   ward,bowness,Bowness Ward,12:00 PM,690,780,https://www.bownessward.ca/announcements,
+ *   event,,General Conference,,540,660,https://www.churchofjesuschrist.org/general-conference,2025-04-05
+ *   event,,General Conference,,780,900,https://www.churchofjesuschrist.org/general-conference,2025-04-05
  */
 
-const REQUIRED_WARD_COLUMNS  = ['key', 'name', 'displayTime', 'windowStart', 'windowEnd', 'url'];
-const REQUIRED_EVENT_COLUMNS = ['date', 'name', 'windowStart', 'windowEnd', 'url'];
+const REQUIRED_COLUMNS = ['type', 'name', 'windowStart', 'windowEnd', 'url'];
 
 // ── Placeholder data ───────────────────────────────────────────────────────────
 // Used when SHEET_CSV_URL is not set or the fetch fails.
-// Replace these URLs with production URLs when going live.
 const PLACEHOLDER_WARDS = [
   {
     key:         'rockyview',
@@ -51,13 +55,17 @@ const PLACEHOLDER_WARDS = [
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-export async function fetchWardData() {
+/**
+ * Fetches all sheet data from SHEET_CSV_URL and returns ward rows and event rows.
+ * Falls back to placeholder wards and no events if the URL is unset or the fetch fails.
+ */
+export async function fetchSheetData() {
   const sheetUrl = import.meta.env.SHEET_CSV_URL;
 
   if (!sheetUrl) {
     console.warn('[data] SHEET_CSV_URL is not set — using placeholder ward data.');
     console.warn('[data] Copy .env.example to .env and add your Google Sheet CSV URL.');
-    return PLACEHOLDER_WARDS;
+    return { wards: PLACEHOLDER_WARDS, specialEvents: [] };
   }
 
   try {
@@ -69,69 +77,19 @@ export async function fetchWardData() {
 
     if (rows.length === 0) throw new Error('Sheet returned no data rows');
 
-    const missing = REQUIRED_WARD_COLUMNS.filter(col => !(col in rows[0]));
+    const missing = REQUIRED_COLUMNS.filter(col => !(col in rows[0]));
     if (missing.length > 0) throw new Error(`Sheet is missing columns: ${missing.join(', ')}`);
 
-    console.log(`[data] Loaded ${rows.length} ward(s) from Google Sheet.`);
-    return rows;
+    const wards         = rows.filter(r => r.type === 'ward');
+    const specialEvents = rows.filter(r => r.type === 'event');
+
+    console.log(`[data] Loaded ${wards.length} ward(s) and ${specialEvents.length} special event session(s).`);
+    return { wards, specialEvents };
 
   } catch (err) {
     console.error(`[data] Failed to fetch sheet data: ${err.message}`);
     console.error('[data] Falling back to placeholder ward data.');
-    return PLACEHOLDER_WARDS;
-  }
-}
-
-// ── Special events ─────────────────────────────────────────────────────────────
-
-/**
- * Fetches special event sessions from a second published Google Sheet tab.
- *
- * Expected columns (row 1 must be a header row with these exact names):
- *   date         – YYYY-MM-DD (e.g. 2025-04-05)
- *   name         – Display name (e.g. General Conference)
- *   windowStart  – Session start, minutes since midnight (e.g. 540 = 9:00 AM)
- *   windowEnd    – Session end,   minutes since midnight (e.g. 660 = 11:00 AM)
- *   url          – URL to redirect to during this session
- *
- * Add one row per session. Multiple sessions on the same date are supported.
- *
- * Example rows:
- *   date,name,windowStart,windowEnd,url
- *   2025-04-05,General Conference,540,660,https://www.churchofjesuschrist.org/general-conference
- *   2025-04-05,General Conference,780,900,https://www.churchofjesuschrist.org/general-conference
- *   2025-04-06,General Conference,540,660,https://www.churchofjesuschrist.org/general-conference
- *   2025-04-06,General Conference,780,900,https://www.churchofjesuschrist.org/general-conference
- */
-export async function fetchSpecialEvents() {
-  const sheetUrl = import.meta.env.SPECIAL_EVENTS_CSV_URL;
-
-  if (!sheetUrl) {
-    console.warn('[data] SPECIAL_EVENTS_CSV_URL is not set — no special events loaded.');
-    return [];
-  }
-
-  try {
-    const res = await fetch(sheetUrl);
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-
-    const csv = await res.text();
-    const rows = parseCSV(csv);
-
-    if (rows.length === 0) {
-      console.log('[data] Special events sheet is empty.');
-      return [];
-    }
-
-    const missing = REQUIRED_EVENT_COLUMNS.filter(col => !(col in rows[0]));
-    if (missing.length > 0) throw new Error(`Special events sheet missing columns: ${missing.join(', ')}`);
-
-    console.log(`[data] Loaded ${rows.length} special event session(s) from Google Sheet.`);
-    return rows;
-
-  } catch (err) {
-    console.error(`[data] Failed to fetch special events: ${err.message}`);
-    return [];
+    return { wards: PLACEHOLDER_WARDS, specialEvents: [] };
   }
 }
 

@@ -1,5 +1,5 @@
 ---
-import { fetchWardData, fetchSpecialEvents } from '../lib/data.js';
+import { fetchSheetData } from '../lib/data.js';
 
 // ── Site identity ──────────────────────────────────────────────────────────────
 // Update these two lines when deploying for a different stake or meeting schedule.
@@ -7,10 +7,7 @@ const STAKE_NAME = 'Calgary Alberta West Stake';
 const PAGE_TITLE  = 'Ward Bulletin';
 
 // ── Data (fetched from Google Sheets at build time) ────────────────────────────
-const [wards, specialEvents] = await Promise.all([
-  fetchWardData(),
-  fetchSpecialEvents(),
-]);
+const { wards, specialEvents } = await fetchSheetData();
 
 // Build the config objects the client-side script expects.
 // These are serialised into the page at build time — no runtime fetch needed.
