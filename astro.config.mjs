@@ -13,6 +13,5 @@ export default defineConfig({
   // If this is a user/org site (repo named YOUR_USERNAME.github.io):
   //   site: 'https://YOUR_USERNAME.github.io'
   //   base: '/'   ← or omit base entirely
-  site: 'https://rswolff.github.io',
-  base: '/Meetinghouse-Bulletin',
+  site: 'https://wardbulletin.ca',
 });
