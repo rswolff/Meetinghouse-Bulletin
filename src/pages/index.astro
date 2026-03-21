@@ -713,4 +713,27 @@ const specialEventsConfig = specialEvents.map(e => ({
   @keyframes trackFill {
     to { transform: translateX(0); }
   }
+
+  @media (max-width: 1024px) {
+    main {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #ward-cards-section {
+      width: 100%;
+    }
+
+    .card-stack {
+      max-width: 100%;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
+    }
+
+    .conference-card {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
 </style>
