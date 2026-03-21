@@ -130,24 +130,11 @@ const specialEventsConfig = specialEvents.map(e => ({
       </div>
     </div>
 
-    <!-- Schedule Banner -->
-    <div class="schedule-banner">
-      <div class="schedule-inner">
-        <span class="sched-heading">Schedule</span>
-        <div class="sched-items">
-          {wards.map(ward => (
-            <div class="sched-item">
-              <span class="sched-time">{ward.displayTime}</span>
-              <span class="sched-ward">{ward.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <div class="header-rule"></div>
 
     <!-- Ward Cards -->
     <main>
-      <p class="section-label" id="main-section-label">Ward Announcements</p>
+      <p class="section-label" id="main-section-label">Ward Bulletins</p>
 
       <!-- Conference card — hidden by default, shown by JS on conference days -->
       <div id="conference-card" style="display:none" class="conference-card">
@@ -474,52 +461,11 @@ const specialEventsConfig = specialEvents.map(e => ({
     animation: fadeUp 0.65s ease 0.3s forwards;
   }
 
-  /* Schedule Banner */
-  .schedule-banner {
+  /* Header separator */
+  .header-rule {
+    height: 5px;
     background: var(--teal-dark);
-    padding: 0.95rem 2rem;
-    opacity: 0;
-    animation: fadeIn 0.5s ease 0.38s forwards;
   }
-
-  .schedule-inner {
-    max-width: 520px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    row-gap: 0.5rem;
-  }
-
-  .sched-heading {
-    font-size: 0.6rem;
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
-    font-weight: 600;
-    margin-right: 1.2rem;
-    flex-shrink: 0;
-  }
-
-  .sched-items {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .sched-item {
-    display: flex;
-    align-items: baseline;
-    gap: 0.4rem;
-    padding: 0 0.85rem;
-    border-right: 1px solid rgba(255,255,255,0.12);
-    font-size: 0.82rem;
-    line-height: 1;
-  }
-  .sched-item:last-child { border-right: none; }
-  .sched-time { color: var(--teal-pale); font-weight: 400; }
-  .sched-ward { color: rgba(255,255,255,0.7); }
 
   /* Main */
   main {
