@@ -26,6 +26,9 @@ scripts/
 astro.config.mjs      — static output mode
 ```
 
+## Brand Guidelines
+Brand guidelines are found in brand-guidelines.md in this project
+
 ## Redirect Priority (client-side, runs on page load)
 
 1. **Active special event session** — is a special event session in progress right now? → redirect to its URL
