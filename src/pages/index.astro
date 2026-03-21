@@ -123,10 +123,11 @@ const specialEventsConfig = specialEvents.map(e => ({
         <polygon points="755,0 800,0 800,100"           fill="rgba(220,244,250,0.55)"/>
       </svg>
 
-      <div class="header-content">
-        <p class="stake-label">{STAKE_NAME}</p>
-        <h1>{PAGE_TITLE}</h1>
-        <p class="subtitle">Select your ward below, or scan during services for automatic direction</p>
+      <div class="header-container">
+        <div class="header-content">
+          <p class="stake-label">{STAKE_NAME}</p>
+          <h1>{PAGE_TITLE}</h1>
+        </div>
       </div>
     </div>
 
@@ -180,10 +181,9 @@ const specialEventsConfig = specialEvents.map(e => ({
     </main>
 
     <footer>
-      <p>
-        This QR code automatically redirects to your ward's announcements during Sunday services.<br />
-        Scan while in the building and you'll be taken directly to the right page.
-      </p>
+      <div class="footer-container">
+        <p>This website is not an official website of The Church of Jesus Christ of Latter-day Saints.</p>
+      </div>
     </footer>
   </div>
 
@@ -422,9 +422,26 @@ const specialEventsConfig = specialEvents.map(e => ({
     width: 100%; height: 100%;
   }
 
-  .header-content {
+  .header-container {
     position: relative;
     z-index: 1;
+    max-width: 1920px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .header-content {
+    position: relative;
+  }
+
+  @media (max-width: 1024px) {
+    .header-container {
+      max-width: 100%;
+    }
   }
 
   .stake-label {
@@ -636,12 +653,22 @@ const specialEventsConfig = specialEvents.map(e => ({
     padding: 1.5rem 2rem 3rem;
     text-align: center;
   }
+  .footer-container {
+    max-width: 1920px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
   footer p {
     font-size: 0.77rem;
     color: var(--text-light);
     line-height: 1.85;
-    max-width: 360px;
-    margin: 0 auto;
+  }
+
+  @media (max-width: 1024px) {
+    .footer-container {
+      max-width: 100%;
+    }
   }
 
   /* Animations */
