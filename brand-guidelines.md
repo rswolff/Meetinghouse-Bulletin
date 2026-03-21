@@ -250,33 +250,7 @@ Images should be **personal, candid, human, and authentic.** Research consistent
 
 ## 9. Formality Spectrum
 
-Intentional design means deliberately considering the **source, subject matter, and setting** for each communication. There is a continuous spectrum from formal to informal — not discrete levels.
-
-### More Formal → Use When:
-- **Source:** First Presidency, Quorum of the Twelve, General Church Officers, word of the Lord
-- **Content:** Temple ordinances, the Atonement, religious freedom, Church administration, addiction, abuse
-- **Setting:** Church administration, media communications, official forms
-- **Design signals:** Deep/rich palette colors · McKay typeface (especially all-caps) · Portrait photography · Reserved, symmetrical layouts · Centered type
-
-### Less Formal → Use When:
-- **Source:** General Church communications
-- **Content:** Gospel principles, home and family, family history, educational materials, Church history
-- **Setting:** Classroom, family home evening, social media, personal study, individual sharing
-- **Design signals:** Bright/vibrant colors · Zoram typeface · Candid photography and illustration · Open, energetic layouts · Off-center compositions
-
-> **Rule of thumb:** Most web and digital products will lean informal. When unsure, lean toward a more informal and personal tone — research shows all audiences respond most positively to bright, inviting, optimistic designs.
-
-### How to Move the Needle on Formality
-
-| Element | Formal → Informal |
-|---------|-------------------|
-| **Color** | Deep navy/dark crimson → Bright blue/yellow/green |
-| **Type - Headline** | McKay all-caps → Zoram Light upper/lowercase |
-| **Type - Subhead** | McKay italic → Zoram upper/lowercase |
-| **Layout** | Centered, symmetrical → Asymmetric, dynamic |
-| **Light graphic** | Subtle white at low opacity → Color from palette, more visible |
-| **Photography** | Studio portrait → Environmental, candid |
-| **Illustration** | Elegant, subdued → Energetic, metaphorical |
+Omitted
 
 ---
 
