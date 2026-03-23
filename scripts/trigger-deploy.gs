@@ -1,8 +1,9 @@
 /**
- * Meetinghouse Bulletin — Auto Deploy Trigger (GitHub Pages)
+ * Meetinghouse Bulletin — Manual Deploy Trigger (GitHub Actions)
  *
- * Paste this script into your Google Sheet's Apps Script editor to
- * automatically trigger a site rebuild whenever the ward data is edited.
+ * Paste this script into your Google Sheet's Apps Script editor to add a
+ * "Bulletin" menu to the sheet. Use the menu item to trigger a site rebuild
+ * whenever you're ready to publish your changes.
  *
  * ── SETUP ─────────────────────────────────────────────────────────────────────
  *
@@ -21,26 +22,22 @@
  *      b. In the toolbar, select "setCredentials" from the function dropdown
  *      c. Click Run — you'll be asked to authorise the script
  *      d. Check the Execution Log to confirm "Credentials saved"
- * 5. Add the edit trigger:
- *      a. Click the clock icon (Triggers) in the left sidebar
- *      b. Click "+ Add Trigger" (bottom right)
- *      c. Choose function: onSheetEdit
- *      d. Event source: From spreadsheet
- *      e. Event type: On edit
- *      f. Click Save
- * 6. Enable GitHub Pages in your repo:
+ * 5. Enable GitHub Pages in your repo:
  *      a. Repo → Settings → Pages
  *      b. Source: GitHub Actions
+ * 6. Reload the spreadsheet — a "Bulletin" menu will appear in the menu bar.
+ *    Use Bulletin → Publish to trigger a rebuild.
  */
 
 
 /**
- * Triggered automatically on every cell edit.
- * Only fires a rebuild if the edit was on the first sheet (the ward data).
+ * Adds a custom "Bulletin" menu to the spreadsheet when it is opened.
  */
-function onSheetEdit(e) {
-  if (e.source.getActiveSheet().getIndex() !== 1) return;
-  triggerDeploy();
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Bulletin')
+    .addItem('Publish', 'triggerDeploy')
+    .addToUi();
 }
 
 
